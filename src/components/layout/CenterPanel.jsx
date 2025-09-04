@@ -1,9 +1,12 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Plus } from 'lucide-react'
+import { X, Plus, Settings } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { useApiStore } from '@/store'
 import { RequestEditor } from '@/components/features/RequestEditor'
+import { EnvironmentEditor } from '@/components/features/EnvironmentEditor'
+import { EnvironmentSwitcher } from '@/components/common/EnvironmentSwitcher'
 import { cn, HTTP_METHOD_COLORS } from '@/lib/utils'
 
 /**
@@ -11,18 +14,24 @@ import { cn, HTTP_METHOD_COLORS } from '@/lib/utils'
  * 包含标签头和主工作区
  */
 export function CenterPanel() {
-  const { tabs, activeTabId, closeTab, setActiveTab } = useApiStore()
+  const { t } = useTranslation()
+  const { tabs, activeTabId, closeTab, setActiveTab, createNewTab } = useApiStore()
 
   return (
     <div className="flex flex-col h-full bg-background">
       {/* 标签头 */}
-      <div className="h-14 border-b bg-muted/30 flex items-center">
+      <div className="h-14 border-b bg-muted/30 flex items-center relative">
         <TabManager
           tabs={tabs}
           activeTabId={activeTabId}
           onTabClick={setActiveTab}
           onTabClose={closeTab}
+          onNewTab={createNewTab}
         />
+        {/* 环境切换器 - 独立放置在最右侧 */}
+        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
+          <EnvironmentSwitcher />
+        </div>
       </div>
 
       {/* 主工作区 */}
@@ -37,7 +46,7 @@ export function CenterPanel() {
               transition={{ duration: 0.2 }}
               className="h-full"
             >
-              <RequestEditor tabId={activeTabId} />
+              <TabContent tabId={activeTabId} />
             </motion.div>
           ) : (
             <motion.div
@@ -47,8 +56,8 @@ export function CenterPanel() {
             >
               <div className="text-center">
                 <div className="text-6xl mb-4">🚀</div>
-                <h3 className="text-lg font-medium mb-2">欢迎使用 APICraft</h3>
-                <p className="text-sm">选择一个API开始测试，或创建新的请求</p>
+                <h3 className="text-base font-medium mb-2">{t('welcome.title')}</h3>
+                <p className="text-xs text-muted-foreground">{t('welcome.subtitle')}</p>
               </div>
             </motion.div>
           )}
@@ -59,11 +68,30 @@ export function CenterPanel() {
 }
 
 /**
+ * 标签页内容组件
+ */
+function TabContent({ tabId }) {
+  const { tabs } = useApiStore()
+  const tab = tabs.find(t => t.id === tabId)
+
+  if (!tab) return null
+
+  // 根据标签页类型渲染不同的内容
+  switch (tab.type) {
+    case 'environment':
+      return <EnvironmentEditor environmentId={tab.data.environmentId} />
+    case 'request':
+    default:
+      return <RequestEditor tabId={tabId} />
+  }
+}
+
+/**
  * 标签管理器组件
  */
-function TabManager({ tabs, activeTabId, onTabClick, onTabClose }) {
+function TabManager({ tabs, activeTabId, onTabClick, onTabClose, onNewTab }) {
   return (
-    <div className="flex items-center h-full overflow-x-auto custom-scrollbar">
+    <div className="flex items-center h-full overflow-x-auto custom-scrollbar pr-32">
       {/* 标签列表 */}
       <div className="flex items-center">
         {tabs.map((tab) => (
@@ -82,6 +110,7 @@ function TabManager({ tabs, activeTabId, onTabClick, onTabClose }) {
         variant="ghost"
         size="icon"
         className="h-8 w-8 ml-2 flex-shrink-0"
+        onClick={onNewTab}
       >
         <Plus className="h-4 w-4" />
       </Button>
@@ -104,8 +133,10 @@ function Tab({ tab, isActive, onClick, onClose }) {
       )}
       onClick={onClick}
     >
-      {/* HTTP方法标签 */}
-      {tab.data?.method && (
+      {/* 标签页类型图标 */}
+      {tab.type === 'environment' ? (
+        <Settings className="h-3 w-3 text-muted-foreground" />
+      ) : tab.data?.method && (
         <div className={cn(
           "px-1 py-0.5 rounded text-xs font-medium",
           methodColors

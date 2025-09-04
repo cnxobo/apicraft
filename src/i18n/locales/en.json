@@ -1,0 +1,107 @@
+{
+  "common": {
+    "send": "Send",
+    "save": "Save",
+    "copy": "Copy",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "settings": "Settings",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "noResults": "No results found"
+  },
+  "header": {
+    "appName": "APICraft",
+    "searchPlaceholder": "Search APIs, collections...",
+    "myWorkspace": "My Workspace",
+    "settings": "Settings",
+    "user": "User"
+  },
+  "sidebar": {
+    "collections": "Collections",
+    "environments": "Environments",
+    "flows": "Flows",
+    "apis": "APIs",
+    "history": "History",
+    "docs": "Documentation",
+    "logs": "Logs"
+  },
+  "request": {
+    "urlPlaceholder": "Enter request URL...",
+    "send": "Send",
+    "save": "Save",
+    "copy": "Copy",
+    "params": "Params",
+    "headers": "Headers",
+    "body": "Body",
+    "auth": "Auth",
+    "authConfigDev": "Authentication configuration is under development..."
+  },
+  "response": {
+    "status": "Status",
+    "time": "Time",
+    "size": "Size",
+    "headers": "Headers",
+    "body": "Body",
+    "raw": "Raw"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "themes": "Themes",
+    "shortcuts": "Shortcuts",
+    "data": "Data",
+    "addons": "Add-ons",
+    "certificates": "Certificates",
+    "proxy": "Proxy",
+    "update": "Update",
+    "about": "About",
+    "underDevelopment": "This section is under development",
+    "request": {
+      "title": "Request",
+      "httpVersion": "HTTP version",
+      "httpVersionDesc": "Select the HTTP version to use for sending the request.",
+      "requestTimeout": "Request timeout",
+      "requestTimeoutDesc": "Set how long a request should wait for a response before timing out.",
+      "ms": "ms"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "themeDesc": "Choose your preferred theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "shortcuts": {
+      "title": "Keyboard Shortcuts",
+      "openNewTab": "Open New Tab",
+      "closeTab": "Close Tab",
+      "sendRequest": "Send Request",
+      "search": "Search"
+    },
+    "proxy": {
+      "title": "Proxy Configuration",
+      "useSystemProxy": "Use system proxy",
+      "useSystemProxyDesc": "Use the system's proxy configuration",
+      "configure": "Configure"
+    }
+  },
+  "welcome": {
+    "title": "Welcome to APICraft",
+    "subtitle": "Select an API to start testing, or create a new request"
+  },
+  "language": {
+    "switch": "Switch Language",
+    "english": "English",
+    "chinese": "中文"
+  },
+  "environment": {
+    "noEnvironment": "No Environment"
+  }
+}

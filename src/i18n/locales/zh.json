@@ -1,0 +1,107 @@
+{
+  "common": {
+    "send": "发送",
+    "save": "保存",
+    "copy": "复制",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "settings": "设置",
+    "search": "搜索",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "noResults": "未找到结果"
+  },
+  "header": {
+    "appName": "APICraft",
+    "searchPlaceholder": "搜索API、集合...",
+    "myWorkspace": "我的工作区",
+    "settings": "设置",
+    "user": "用户"
+  },
+  "sidebar": {
+    "collections": "集合",
+    "environments": "环境",
+    "flows": "流程",
+    "apis": "接口",
+    "history": "历史",
+    "docs": "文档",
+    "logs": "日志"
+  },
+  "request": {
+    "urlPlaceholder": "输入请求URL...",
+    "send": "发送",
+    "save": "保存",
+    "copy": "复制",
+    "params": "参数",
+    "headers": "请求头",
+    "body": "请求体",
+    "auth": "认证",
+    "authConfigDev": "认证配置功能开发中..."
+  },
+  "response": {
+    "status": "状态",
+    "time": "时间",
+    "size": "大小",
+    "headers": "响应头",
+    "body": "响应体",
+    "raw": "原始"
+  },
+  "settings": {
+    "title": "设置",
+    "general": "通用",
+    "themes": "主题",
+    "shortcuts": "快捷键",
+    "data": "数据",
+    "addons": "插件",
+    "certificates": "证书",
+    "proxy": "代理",
+    "update": "更新",
+    "about": "关于",
+    "underDevelopment": "此功能正在开发中",
+    "request": {
+      "title": "请求",
+      "httpVersion": "HTTP版本",
+      "httpVersionDesc": "选择发送请求时使用的HTTP版本。",
+      "requestTimeout": "请求超时",
+      "requestTimeoutDesc": "设置请求等待响应的超时时间。",
+      "ms": "毫秒"
+    },
+    "appearance": {
+      "title": "外观",
+      "theme": "主题",
+      "themeDesc": "选择您偏好的主题",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统"
+    },
+    "shortcuts": {
+      "title": "键盘快捷键",
+      "openNewTab": "打开新标签",
+      "closeTab": "关闭标签",
+      "sendRequest": "发送请求",
+      "search": "搜索"
+    },
+    "proxy": {
+      "title": "代理配置",
+      "useSystemProxy": "使用系统代理",
+      "useSystemProxyDesc": "使用系统的代理配置",
+      "configure": "配置"
+    }
+  },
+  "welcome": {
+    "title": "欢迎使用 APICraft",
+    "subtitle": "选择一个API开始测试，或创建新的请求"
+  },
+  "language": {
+    "switch": "切换语言",
+    "english": "English",
+    "chinese": "中文"
+  },
+  "environment": {
+    "noEnvironment": "无环境"
+  }
+}

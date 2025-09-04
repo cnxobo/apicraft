@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Send, Save, Copy, MoreHorizontal } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -14,6 +15,7 @@ import { cn, HTTP_METHOD_COLORS } from '@/lib/utils'
  * 包含URL输入、参数配置、请求体编辑等功能
  */
 export function RequestEditor({ tabId }) {
+  const { t } = useTranslation()
   const { tabs, updateTab, addRequestHistory } = useApiStore()
   const [isLoading, setIsLoading] = useState(false)
   const [response, setResponse] = useState(null)
@@ -81,7 +83,7 @@ export function RequestEditor({ tabId }) {
   return (
     <div className="flex flex-col h-full">
       {/* 请求配置区域 */}
-      <div className="border-b bg-background p-4 space-y-4">
+      <div className="border-b bg-background p-3 space-y-3">
         {/* URL输入行 */}
         <div className="flex items-center space-x-2">
           {/* HTTP方法选择 */}
@@ -89,7 +91,7 @@ export function RequestEditor({ tabId }) {
             value={api.method}
             onChange={(e) => updateApi({ method: e.target.value })}
             className={cn(
-              "px-3 py-2 rounded-md border text-sm font-medium min-w-20",
+              "px-2 py-1.5 rounded-md border text-xs font-medium min-w-16 h-8",
               HTTP_METHOD_COLORS[api.method]
             )}
           >
@@ -102,46 +104,47 @@ export function RequestEditor({ tabId }) {
           <Input
             value={api.url}
             onChange={(e) => updateApi({ url: e.target.value })}
-            placeholder="输入请求URL..."
-            className="flex-1"
+            placeholder={t('request.urlPlaceholder')}
+            className="flex-1 h-8 text-xs"
           />
 
-          {/* 发送按钮 */}
+          {/* 发送按钮 - 保持蓝色 */}
           <Button
             onClick={sendRequest}
             disabled={isLoading || !api.url}
-            className="min-w-20"
+            className="min-w-16 h-8 text-xs"
+            variant="default"
           >
             {isLoading ? (
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-3.5 w-3.5" />
               </motion.div>
             ) : (
               <>
-                <Send className="h-4 w-4 mr-1" />
-                发送
+                <Send className="h-3.5 w-3.5 mr-1" />
+                {t('request.send')}
               </>
             )}
           </Button>
 
           {/* 更多操作 */}
-          <Button variant="outline" size="icon">
-            <MoreHorizontal className="h-4 w-4" />
+          <Button variant="outline" size="icon" className="h-8 w-8">
+            <MoreHorizontal className="h-3.5 w-3.5" />
           </Button>
         </div>
 
         {/* 快捷操作按钮 */}
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
             <Save className="h-3 w-3 mr-1" />
-            保存
+            {t('request.save')}
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
             <Copy className="h-3 w-3 mr-1" />
-            复制
+            {t('request.copy')}
           </Button>
         </div>
       </div>
@@ -166,13 +169,15 @@ export function RequestEditor({ tabId }) {
  * 请求详情组件
  */
 function RequestDetails({ api, onUpdate }) {
+  const { t } = useTranslation()
+
   return (
     <Tabs defaultValue="params" className="h-full flex flex-col">
       <TabsList className="grid w-full grid-cols-4 m-2">
-        <TabsTrigger value="params">参数</TabsTrigger>
-        <TabsTrigger value="headers">请求头</TabsTrigger>
-        <TabsTrigger value="body">请求体</TabsTrigger>
-        <TabsTrigger value="auth">认证</TabsTrigger>
+        <TabsTrigger value="params">{t('request.params')}</TabsTrigger>
+        <TabsTrigger value="headers">{t('request.headers')}</TabsTrigger>
+        <TabsTrigger value="body">{t('request.body')}</TabsTrigger>
+        <TabsTrigger value="auth">{t('request.auth')}</TabsTrigger>
       </TabsList>
 
       <div className="flex-1 overflow-hidden">
@@ -189,8 +194,8 @@ function RequestDetails({ api, onUpdate }) {
         </TabsContent>
 
         <TabsContent value="auth" className="h-full m-0">
-          <div className="p-4 text-center text-muted-foreground">
-            认证配置功能开发中...
+          <div className="p-4 text-center text-muted-foreground text-xs">
+            {t('request.authConfigDev')}
           </div>
         </TabsContent>
       </div>
