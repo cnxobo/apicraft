@@ -127,7 +127,7 @@ function ApiItem({ api, isSelected, onClick }) {
       whileHover={{ backgroundColor: 'hsl(var(--accent))' }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        "flex items-center space-x-2 px-2 py-1.5 rounded-md cursor-pointer group",
+        "flex items-center space-x-2 px-2 py-1 rounded-md cursor-pointer group",
         isSelected && "bg-accent"
       )}
       onClick={onClick}

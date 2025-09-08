@@ -8,6 +8,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useApiStore } from '@/store'
 import { ResponseViewer } from './ResponseViewer'
+import { QueryParamsTable } from '@/components/common/QueryParamsTable'
+import { BreadcrumbWithActions } from '@/components/common/Breadcrumb'
 import { cn, HTTP_METHOD_COLORS } from '@/lib/utils'
 
 /**
@@ -80,11 +82,41 @@ export function RequestEditor({ tabId }) {
     }
   }
 
+  // 获取面包屑数据
+  const getBreadcrumbData = () => {
+    // 从API store中获取集合信息
+    const { collections } = useApiStore.getState()
+    let collection = null
+    let folder = null
+
+    // 查找当前API所属的集合
+    for (const col of collections) {
+      const foundApi = col.apis?.find(a => a.id === api.id)
+      if (foundApi) {
+        collection = col
+        break
+      }
+    }
+
+    return { collection, folder, requestName: api.name }
+  }
+
+  const { collection, folder, requestName } = getBreadcrumbData()
+
   return (
     <div className="flex flex-col h-full">
-      {/* 请求配置区域 */}
-      <div className="border-b bg-background p-3 space-y-3">
-        {/* URL输入行 */}
+
+      {/* 面包屑导航 */}
+      <BreadcrumbWithActions
+        collection={collection}
+        folder={folder}
+        requestName={requestName}
+        onSave={() => updateApi({ saved: true })}
+        isSaving={false}
+      />
+
+      {/* URL输入区域 */}
+      <div className="border-b bg-background p-3">
         <div className="flex items-center space-x-2">
           {/* HTTP方法选择 */}
           <select
@@ -108,7 +140,7 @@ export function RequestEditor({ tabId }) {
             className="flex-1 h-8 text-xs"
           />
 
-          {/* 发送按钮 - 保持蓝色 */}
+          {/* 发送按钮 */}
           <Button
             onClick={sendRequest}
             disabled={isLoading || !api.url}
@@ -135,29 +167,17 @@ export function RequestEditor({ tabId }) {
             <MoreHorizontal className="h-3.5 w-3.5" />
           </Button>
         </div>
-
-        {/* 快捷操作按钮 */}
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-            <Save className="h-3 w-3 mr-1" />
-            {t('request.save')}
-          </Button>
-          <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-            <Copy className="h-3 w-3 mr-1" />
-            {t('request.copy')}
-          </Button>
-        </div>
       </div>
 
-      {/* 请求详情和响应区域 */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* 左侧：请求详情 */}
-        <div className="w-1/2 border-r">
+      {/* 配置区域和响应区域 - 上下布局 */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* 上半部分：请求配置 */}
+        <div className="h-1/2 border-b">
           <RequestDetails api={api} onUpdate={updateApi} />
         </div>
 
-        {/* 右侧：响应内容 */}
-        <div className="w-1/2">
+        {/* 下半部分：响应内容 */}
+        <div className="h-1/2">
           <ResponseViewer response={response} isLoading={isLoading} />
         </div>
       </div>
@@ -171,18 +191,35 @@ export function RequestEditor({ tabId }) {
 function RequestDetails({ api, onUpdate }) {
   const { t } = useTranslation()
 
+  // 检查各个部分是否有修改
+  const hasParamsModified = api.params && (Array.isArray(api.params) ? api.params.length > 0 : Object.keys(api.params).length > 0)
+  const hasHeadersModified = api.headers && Object.keys(api.headers).length > 0
+  const hasBodyModified = api.body && api.body.trim().length > 0
+
   return (
     <Tabs defaultValue="params" className="h-full flex flex-col">
-      <TabsList className="grid w-full grid-cols-4 m-2">
-        <TabsTrigger value="params">{t('request.params')}</TabsTrigger>
-        <TabsTrigger value="headers">{t('request.headers')}</TabsTrigger>
-        <TabsTrigger value="body">{t('request.body')}</TabsTrigger>
-        <TabsTrigger value="auth">{t('request.auth')}</TabsTrigger>
+      <TabsList variant="underline" className="w-full mx-2 mt-2">
+        <TabsTrigger variant="underline" value="params" modified={hasParamsModified}>
+          {t('request.params')}
+        </TabsTrigger>
+        <TabsTrigger variant="underline" value="headers" modified={hasHeadersModified}>
+          {t('request.headers')}
+        </TabsTrigger>
+        <TabsTrigger variant="underline" value="body" modified={hasBodyModified}>
+          {t('request.body')}
+        </TabsTrigger>
+        <TabsTrigger variant="underline" value="auth">
+          {t('request.auth')}
+        </TabsTrigger>
       </TabsList>
 
       <div className="flex-1 overflow-hidden">
         <TabsContent value="params" className="h-full m-0">
-          <ParamsEditor params={api.params || {}} onUpdate={(params) => onUpdate({ params })} />
+          <QueryParamsTable
+            params={api.params || []}
+            onUpdate={(params) => onUpdate({ params })}
+            showDescription={true}
+          />
         </TabsContent>
 
         <TabsContent value="headers" className="h-full m-0">
@@ -203,55 +240,7 @@ function RequestDetails({ api, onUpdate }) {
   )
 }
 
-/**
- * 参数编辑器
- */
-function ParamsEditor({ params, onUpdate }) {
-  const paramEntries = Object.entries(params)
 
-  const updateParam = (key, value) => {
-    onUpdate({ ...params, [key]: value })
-  }
-
-  const removeParam = (key) => {
-    const newParams = { ...params }
-    delete newParams[key]
-    onUpdate(newParams)
-  }
-
-  return (
-    <ScrollArea className="h-full">
-      <div className="p-4 space-y-2">
-        {paramEntries.map(([key, value]) => (
-          <div key={key} className="flex items-center space-x-2">
-            <Input
-              value={key}
-              placeholder="参数名"
-              className="flex-1"
-              readOnly
-            />
-            <Input
-              value={value}
-              onChange={(e) => updateParam(key, e.target.value)}
-              placeholder="参数值"
-              className="flex-1"
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => removeParam(key)}
-            >
-              删除
-            </Button>
-          </div>
-        ))}
-        <Button variant="outline" size="sm" className="w-full">
-          添加参数
-        </Button>
-      </div>
-    </ScrollArea>
-  )
-}
 
 /**
  * 请求头编辑器

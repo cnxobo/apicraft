@@ -2,6 +2,7 @@
   "common": {
     "send": "发送",
     "save": "保存",
+    "saving": "保存中...",
     "copy": "复制",
     "cancel": "取消",
     "confirm": "确认",
@@ -41,6 +42,26 @@
     "body": "请求体",
     "auth": "认证",
     "authConfigDev": "认证配置功能开发中..."
+  },
+  "queryParams": {
+    "title": "查询参数",
+    "key": "键",
+    "value": "值",
+    "description": "描述",
+    "enabled": "启用",
+    "selectAll": "全选",
+    "bulkEdit": "批量编辑",
+    "keyValueEdit": "键值编辑",
+    "addParam": "添加参数",
+    "deleteParam": "删除参数",
+    "dragToReorder": "拖拽重新排序",
+    "keyPlaceholder": "参数名",
+    "valuePlaceholder": "参数值",
+    "descriptionPlaceholder": "描述（可选）",
+    "bulkEditPlaceholder": "以 键:值 格式输入参数，每行一个。\n使用 // 注释禁用的参数。",
+    "noParams": "未定义参数",
+    "addFirstParam": "点击\"添加参数\"创建您的第一个参数",
+    "startTyping": "在下方字段中开始输入以添加参数"
   },
   "response": {
     "status": "状态",

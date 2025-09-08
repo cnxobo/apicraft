@@ -2,6 +2,7 @@
   "common": {
     "send": "Send",
     "save": "Save",
+    "saving": "Saving...",
     "copy": "Copy",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -41,6 +42,26 @@
     "body": "Body",
     "auth": "Auth",
     "authConfigDev": "Authentication configuration is under development..."
+  },
+  "queryParams": {
+    "title": "Query Params",
+    "key": "Key",
+    "value": "Value",
+    "description": "Description",
+    "enabled": "Enabled",
+    "selectAll": "Select All",
+    "bulkEdit": "Bulk Edit",
+    "keyValueEdit": "Key-Value Edit",
+    "addParam": "Add Parameter",
+    "deleteParam": "Delete Parameter",
+    "dragToReorder": "Drag to reorder",
+    "keyPlaceholder": "Parameter name",
+    "valuePlaceholder": "Parameter value",
+    "descriptionPlaceholder": "Description (optional)",
+    "bulkEditPlaceholder": "Enter parameters in key:value format, one per line.\nUse // to comment out disabled parameters.",
+    "noParams": "No parameters defined",
+    "addFirstParam": "Click \"Add Parameter\" to create your first parameter",
+    "startTyping": "Start typing in the fields below to add parameters"
   },
   "response": {
     "status": "Status",

@@ -20,7 +20,7 @@ export function CenterPanel() {
   return (
     <div className="flex flex-col h-full bg-background">
       {/* 标签头 */}
-      <div className="h-14 border-b bg-muted/30 flex items-center relative">
+      <div className="h-12 border-b bg-muted/30 flex items-center relative">
         <TabManager
           tabs={tabs}
           activeTabId={activeTabId}
