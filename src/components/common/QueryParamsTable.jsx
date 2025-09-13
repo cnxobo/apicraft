@@ -8,6 +8,71 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 
+
+// 可聚焦即编辑的内联文本输入组件
+const InlineEditableText = React.forwardRef(function InlineEditableText(
+  {
+    value = '',
+    onChange,
+    placeholder,
+    ariaLabel,
+    className,
+  },
+  forwardedRef
+) {
+  const [editing, setEditing] = useState(false)
+  const internalRef = React.useRef(null)
+  const inputRef = forwardedRef || internalRef
+
+  React.useEffect(() => {
+    if (editing) {
+      // 等待切换为输入框后再聚焦，并把光标移到文本末尾
+      const id = setTimeout(() => {
+        if (inputRef?.current) {
+          const el = inputRef.current
+          el.focus()
+          const len = el.value?.length ?? 0
+          try { el.setSelectionRange(len, len) } catch {}
+        }
+      }, 0)
+      return () => clearTimeout(id)
+    }
+  }, [editing, inputRef])
+
+  const hasValue = (value ?? '').trim() !== ''
+
+  return (
+    <div className={cn("w-full", className)}>
+      {!editing ? (
+        <div
+          tabIndex={0}
+          role="textbox"
+          aria-readonly="true"
+          aria-label={ariaLabel || placeholder}
+          onFocus={() => setEditing(true)}
+          className={cn(
+            "h-6 text-xs px-2 flex items-center rounded border border-transparent bg-transparent",
+            "transition-all duration-150 ease-out",
+            hasValue ? "text-foreground" : "text-muted-foreground"
+          )}
+        >
+          {hasValue ? value : (placeholder || '')}
+        </div>
+      ) : (
+        <Input
+          ref={inputRef}
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
+          onBlur={() => setEditing(false)}
+          placeholder={placeholder}
+          aria-label={ariaLabel || placeholder}
+          className={cn("h-6 text-xs transition-all duration-150 ease-out", className)}
+        />
+      )}
+    </div>
+  )
+})
+
 /**
  * 可重用的参数表格组件
  *
@@ -31,11 +96,11 @@ import { cn } from '@/lib/utils'
  *   showDescription={true}
  * />
  */
-export function QueryParamsTable({ 
-  params = [], 
-  onUpdate, 
+export function QueryParamsTable({
+  params = [],
+  onUpdate,
   className,
-  showDescription = true 
+  showDescription = true
 }) {
   const { t } = useTranslation()
   const [isBulkEdit, setIsBulkEdit] = useState(false)
@@ -112,7 +177,7 @@ export function QueryParamsTable({
         const isDisabled = line.trim().startsWith('//')
         const cleanLine = isDisabled ? line.replace(/^\/\/\s*/, '') : line
         const [key = '', value = ''] = cleanLine.split(':').map(s => s.trim())
-        
+
         return {
           id: `param-${Date.now()}-${index}`,
           key,
@@ -141,12 +206,12 @@ export function QueryParamsTable({
   const handleDragOver = useCallback((e, targetIndex) => {
     e.preventDefault()
     if (draggedIndex === null || draggedIndex === targetIndex) return
-    
+
     const newParams = [...normalizedParams]
     const draggedItem = newParams[draggedIndex]
     newParams.splice(draggedIndex, 1)
     newParams.splice(targetIndex, 0, draggedItem)
-    
+
     setDraggedIndex(targetIndex)
     onUpdate?.(newParams)
   }, [draggedIndex, normalizedParams, onUpdate])
@@ -210,26 +275,28 @@ export function QueryParamsTable({
         </Button>
       </div>
 
-      {/* 表格头部 */}
-      <div className="border-b bg-muted/10">
-        <div className="grid grid-cols-12 gap-2 px-3 py-1 text-xs font-medium text-muted-foreground">
-          <div className="col-span-1 flex items-center justify-center">
-            <span className="text-xs opacity-50">#</span>
+      {/* 表格头部：在非批量编辑模式下显示 */}
+      {!isBulkEdit && (
+        <div className="border-b bg-muted/10">
+          <div className="grid grid-cols-12 gap-2 px-3 py-1 text-xs font-medium text-muted-foreground">
+            <div className="col-span-1 flex items-center justify-center">
+              <span className="text-xs opacity-50">#</span>
+            </div>
+            <div className="col-span-1 flex items-center">
+              <Checkbox
+                checked={allEnabled}
+                onCheckedChange={handleSelectAll}
+                className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
+                {...(someEnabled && !allEnabled ? { 'data-state': 'indeterminate' } : {})}
+              />
+            </div>
+            <div className="col-span-3 flex items-center">{t('queryParams.key')}</div>
+            <div className="col-span-3 flex items-center">{t('queryParams.value')}</div>
+            {showDescription && <div className="col-span-3 flex items-center">{t('queryParams.description')}</div>}
+            <div className="col-span-1 flex items-center justify-center"></div> {/* 删除按钮 */}
           </div>
-          <div className="col-span-1 flex items-center">
-            <Checkbox
-              checked={allEnabled}
-              onCheckedChange={handleSelectAll}
-              className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
-              {...(someEnabled && !allEnabled ? { 'data-state': 'indeterminate' } : {})}
-            />
-          </div>
-          <div className="col-span-3 flex items-center">{t('queryParams.key')}</div>
-          <div className="col-span-3 flex items-center">{t('queryParams.value')}</div>
-          {showDescription && <div className="col-span-3 flex items-center">{t('queryParams.description')}</div>}
-          <div className="col-span-1 flex items-center justify-center"></div> {/* 删除按钮 */}
         </div>
-      </div>
+      )}
 
       {/* 内容区域 */}
       <div className="flex-1 overflow-hidden">
@@ -313,35 +380,38 @@ function NewParamRow({ newRowData, showDescription, showCheckbox, onUpdate }) {
 
       {/* 键 */}
       <div className="col-span-3">
-        <Input
+        <InlineEditableText
           ref={keyInputRef}
           value={newRowData.key}
-          onChange={(e) => onUpdate('key', e.target.value, keyInputRef)}
+          onChange={(val) => onUpdate('key', val, keyInputRef)}
           placeholder={t('queryParams.keyPlaceholder')}
-          className="h-6 text-xs bg-background border-input"
+          ariaLabel={t('queryParams.key')}
+          className="h-6 text-xs"
         />
       </div>
 
       {/* 值 */}
       <div className="col-span-3">
-        <Input
+        <InlineEditableText
           ref={valueInputRef}
           value={newRowData.value}
-          onChange={(e) => onUpdate('value', e.target.value, valueInputRef)}
+          onChange={(val) => onUpdate('value', val, valueInputRef)}
           placeholder={t('queryParams.valuePlaceholder')}
-          className="h-6 text-xs bg-background border-input"
+          ariaLabel={t('queryParams.value')}
+          className="h-6 text-xs"
         />
       </div>
 
       {/* 描述 */}
       {showDescription && (
         <div className="col-span-3">
-          <Input
+          <InlineEditableText
             ref={descriptionInputRef}
             value={newRowData.description}
-            onChange={(e) => onUpdate('description', e.target.value, descriptionInputRef)}
+            onChange={(val) => onUpdate('description', val, descriptionInputRef)}
             placeholder={t('queryParams.descriptionPlaceholder')}
-            className="h-6 text-xs bg-background border-input"
+            ariaLabel={t('queryParams.description')}
+            className="h-6 text-xs"
           />
         </div>
       )}
@@ -410,20 +480,22 @@ function ParamRow({
 
       {/* 键 */}
       <div className="col-span-3">
-        <Input
+        <InlineEditableText
           value={param.key}
-          onChange={(e) => onUpdate({ key: e.target.value })}
+          onChange={(val) => onUpdate({ key: val })}
           placeholder={t('queryParams.keyPlaceholder')}
+          ariaLabel={t('queryParams.key')}
           className="h-6 text-xs"
         />
       </div>
 
       {/* 值 */}
       <div className="col-span-3">
-        <Input
+        <InlineEditableText
           value={param.value}
-          onChange={(e) => onUpdate({ value: e.target.value })}
+          onChange={(val) => onUpdate({ value: val })}
           placeholder={t('queryParams.valuePlaceholder')}
+          ariaLabel={t('queryParams.value')}
           className="h-6 text-xs"
         />
       </div>
@@ -431,10 +503,11 @@ function ParamRow({
       {/* 描述 */}
       {showDescription && (
         <div className="col-span-3">
-          <Input
+          <InlineEditableText
             value={param.description}
-            onChange={(e) => onUpdate({ description: e.target.value })}
+            onChange={(val) => onUpdate({ description: val })}
             placeholder={t('queryParams.descriptionPlaceholder')}
+            ariaLabel={t('queryParams.description')}
             className="h-6 text-xs"
           />
         </div>
