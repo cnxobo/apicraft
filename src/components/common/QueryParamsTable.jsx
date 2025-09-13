@@ -107,7 +107,6 @@ export function QueryParamsTable({
   const [bulkEditText, setBulkEditText] = useState('')
   const [draggedIndex, setDraggedIndex] = useState(null)
   const [newRowData, setNewRowData] = useState({ key: '', value: '', description: '' })
-  const [isNewRowActive, setIsNewRowActive] = useState(false)
 
   // 转换参数格式为内部使用的格式
   const normalizedParams = React.useMemo(() => {
@@ -144,17 +143,7 @@ export function QueryParamsTable({
     onUpdate?.(newParams)
   }, [normalizedParams, onUpdate])
 
-  // 添加新参数
-  const handleAddParam = useCallback(() => {
-    const newParam = {
-      id: `param-${Date.now()}`,
-      key: '',
-      value: '',
-      description: '',
-      enabled: true
-    }
-    onUpdate?.([...normalizedParams, newParam])
-  }, [normalizedParams, onUpdate])
+
 
   // 删除参数
   const handleDeleteParam = useCallback((index) => {
@@ -220,45 +209,38 @@ export function QueryParamsTable({
     setDraggedIndex(null)
   }, [])
 
-  // 处理新行输入 - 保持焦点和光标位置
-  const handleNewRowChange = useCallback((field, value, inputRef) => {
-    // 保存当前光标位置
-    const cursorPosition = inputRef?.current?.selectionStart || 0
-
-    const newData = { ...newRowData, [field]: value }
-    setNewRowData(newData)
-
-    // 检查是否有任何字段有值
-    const hasValue = newData.key.trim() || newData.value.trim() || newData.description.trim()
-
-    if (hasValue && !isNewRowActive) {
-      // 第一次输入，激活新行并添加到参数列表
-      setIsNewRowActive(true)
-      const newParam = {
-        id: `param-${Date.now()}`,
-        key: newData.key,
-        value: newData.value,
-        description: newData.description,
-        enabled: true
-      }
-      onUpdate?.([...normalizedParams, newParam])
-
-      // 使用 setTimeout 确保 DOM 更新后恢复焦点和光标位置
-      setTimeout(() => {
-        if (inputRef?.current) {
-          inputRef.current.focus()
-          inputRef.current.setSelectionRange(cursorPosition, cursorPosition)
+  // 处理新行输入（无光标管理）
+  const handleNewRowChange = useCallback((field, value) => {
+    setNewRowData(prev => {
+      const updated = { ...prev, [field]: value }
+      const hasValue = updated.key.trim() || updated.value.trim() || updated.description.trim()
+      if (hasValue) {
+        const newParam = {
+          id: `param-${Date.now()}`,
+          key: updated.key,
+          value: updated.value,
+          description: updated.description,
+          enabled: true,
         }
-        // 重置新行数据，准备下一个输入
-        setNewRowData({ key: '', value: '', description: '' })
-        setIsNewRowActive(false)
-      }, 0)
-    }
-  }, [newRowData, isNewRowActive, normalizedParams, onUpdate])
+        onUpdate?.([...normalizedParams, newParam])
+        // 立即清空，保持输入焦点在新行，便于连续录入
+        return { key: '', value: '', description: '' }
+      }
+      return updated
+    })
+  }, [normalizedParams, onUpdate])
 
   // 检查是否全选
   const allEnabled = normalizedParams.length > 0 && normalizedParams.every(param => param.enabled)
   const someEnabled = normalizedParams.some(param => param.enabled)
+
+  // 统一渲染数组：已提交参数 + 底部新行
+  const rowsForRender = React.useMemo(() => (
+    [
+      ...normalizedParams,
+      { id: 'new-row', key: newRowData.key, value: newRowData.value, description: newRowData.description, enabled: true, isNew: true },
+    ]
+  ), [normalizedParams, newRowData])
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
@@ -314,34 +296,29 @@ export function QueryParamsTable({
           // 表格模式
           <ScrollArea className="h-full">
             <div className="p-3 space-y-0">
-              {/* 参数行 */}
+              {/* 参数行（统一渲染：包含新行） */}
               <AnimatePresence>
-                {normalizedParams.map((param, index) => (
+                {rowsForRender.map((param, index) => (
                   <ParamRow
                     key={param.id}
                     param={param}
-                    index={index}
                     showDescription={showDescription}
-                    onUpdate={(updates) => handleParamUpdate(index, updates)}
-                    onDelete={() => handleDeleteParam(index)}
-                    onDragStart={() => handleDragStart(index)}
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDragEnd={handleDragEnd}
-                    isDragging={draggedIndex === index}
+                    onUpdate={param.isNew
+                      ? (updates) => setNewRowData(prev => ({ ...prev, ...updates }))
+                      : (updates) => handleParamUpdate(index, updates)
+                    }
+                    onNewChange={param.isNew ? handleNewRowChange : undefined}
+                    onDelete={param.isNew ? undefined : () => handleDeleteParam(index)}
+                    onDragStart={param.isNew ? undefined : () => handleDragStart(index)}
+                    onDragOver={param.isNew ? undefined : (e) => handleDragOver(e, index)}
+                    onDragEnd={param.isNew ? undefined : handleDragEnd}
+                    isDragging={!param.isNew && draggedIndex === index}
                   />
                 ))}
               </AnimatePresence>
 
-              {/* 新参数输入行 */}
-              <NewParamRow
-                newRowData={newRowData}
-                showDescription={showDescription}
-                showCheckbox={isNewRowActive}
-                onUpdate={handleNewRowChange}
-              />
-
               {/* 空状态 */}
-              {normalizedParams.length === 0 && !isNewRowActive && (
+              {normalizedParams.length === 0 && (
                 <div className="py-3 text-center text-muted-foreground">
                   <div className="space-y-1">
                     <p className="text-xs">{t('queryParams.noParams')}</p>
@@ -357,87 +334,25 @@ export function QueryParamsTable({
   )
 }
 
-/**
- * 新参数输入行组件
- */
-function NewParamRow({ newRowData, showDescription, showCheckbox, onUpdate }) {
-  const { t } = useTranslation()
-  const keyInputRef = React.useRef(null)
-  const valueInputRef = React.useRef(null)
-  const descriptionInputRef = React.useRef(null)
-
-  return (
-    <div className="grid grid-cols-12 gap-2 px-3 py-1.5 rounded-md border border-dashed border-muted-foreground/30 bg-muted/10">
-      {/* 拖拽手柄占位 */}
-      <div className="col-span-1 flex items-center justify-center"></div>
-
-      {/* 启用复选框 */}
-      <div className="col-span-1 flex items-center">
-        {showCheckbox && (
-          <Checkbox checked={true} disabled />
-        )}
-      </div>
-
-      {/* 键 */}
-      <div className="col-span-3">
-        <InlineEditableText
-          ref={keyInputRef}
-          value={newRowData.key}
-          onChange={(val) => onUpdate('key', val, keyInputRef)}
-          placeholder={t('queryParams.keyPlaceholder')}
-          ariaLabel={t('queryParams.key')}
-          className="h-6 text-xs"
-        />
-      </div>
-
-      {/* 值 */}
-      <div className="col-span-3">
-        <InlineEditableText
-          ref={valueInputRef}
-          value={newRowData.value}
-          onChange={(val) => onUpdate('value', val, valueInputRef)}
-          placeholder={t('queryParams.valuePlaceholder')}
-          ariaLabel={t('queryParams.value')}
-          className="h-6 text-xs"
-        />
-      </div>
-
-      {/* 描述 */}
-      {showDescription && (
-        <div className="col-span-3">
-          <InlineEditableText
-            ref={descriptionInputRef}
-            value={newRowData.description}
-            onChange={(val) => onUpdate('description', val, descriptionInputRef)}
-            placeholder={t('queryParams.descriptionPlaceholder')}
-            ariaLabel={t('queryParams.description')}
-            className="h-6 text-xs"
-          />
-        </div>
-      )}
-
-      {/* 删除按钮占位 */}
-      <div className="col-span-1 flex items-center justify-center"></div>
-    </div>
-  )
-}
 
 /**
  * 参数行组件
  */
 function ParamRow({
   param,
-  index,
   showDescription,
   onUpdate,
   onDelete,
   onDragStart,
   onDragOver,
   onDragEnd,
-  isDragging
+  isDragging,
+  onNewChange,
 }) {
   const { t } = useTranslation()
   const [isHovered, setIsHovered] = useState(false)
+
+  const isNew = !!param?.isNew
 
   return (
     <motion.div
@@ -448,41 +363,46 @@ function ParamRow({
       className={cn(
         "grid grid-cols-12 gap-2 px-3 py-1 rounded-md border transition-colors group",
         isDragging && "opacity-50",
-        !param.enabled && "opacity-60"
+        !isNew && !param.enabled && "opacity-60",
+        isNew && "border-dashed bg-muted/10 border-muted-foreground/30"
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      draggable
+      draggable={!isNew}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
       {/* 拖拽手柄 */}
       <div className="col-span-1 flex items-center justify-center">
-        <div
-          className={cn(
-            "cursor-grab active:cursor-grabbing transition-opacity",
-            isHovered ? "opacity-100" : "opacity-0"
-          )}
-          title={t('queryParams.dragToReorder')}
-        >
-          <GripVertical className="h-3 w-3 text-muted-foreground" />
-        </div>
+        {!isNew ? (
+          <div
+            className={cn(
+              "cursor-grab active:cursor-grabbing transition-opacity",
+              isHovered ? "opacity-100" : "opacity-0"
+            )}
+            title={t('queryParams.dragToReorder')}
+          >
+            <GripVertical className="h-3 w-3 text-muted-foreground" />
+          </div>
+        ) : null}
       </div>
 
       {/* 启用复选框 */}
       <div className="col-span-1 flex items-center">
-        <Checkbox
-          checked={param.enabled}
-          onCheckedChange={(checked) => onUpdate({ enabled: checked })}
-        />
+        {!isNew ? (
+          <Checkbox
+            checked={param.enabled}
+            onCheckedChange={(checked) => onUpdate({ enabled: checked })}
+          />
+        ) : null}
       </div>
 
       {/* 键 */}
       <div className="col-span-3">
         <InlineEditableText
           value={param.key}
-          onChange={(val) => onUpdate({ key: val })}
+          onChange={(val) => (isNew && onNewChange ? onNewChange('key', val) : onUpdate({ key: val }))}
           placeholder={t('queryParams.keyPlaceholder')}
           ariaLabel={t('queryParams.key')}
           className="h-6 text-xs"
@@ -493,7 +413,7 @@ function ParamRow({
       <div className="col-span-3">
         <InlineEditableText
           value={param.value}
-          onChange={(val) => onUpdate({ value: val })}
+          onChange={(val) => (isNew && onNewChange ? onNewChange('value', val) : onUpdate({ value: val }))}
           placeholder={t('queryParams.valuePlaceholder')}
           ariaLabel={t('queryParams.value')}
           className="h-6 text-xs"
@@ -505,7 +425,7 @@ function ParamRow({
         <div className="col-span-3">
           <InlineEditableText
             value={param.description}
-            onChange={(val) => onUpdate({ description: val })}
+            onChange={(val) => (isNew && onNewChange ? onNewChange('description', val) : onUpdate({ description: val }))}
             placeholder={t('queryParams.descriptionPlaceholder')}
             ariaLabel={t('queryParams.description')}
             className="h-6 text-xs"
@@ -515,18 +435,20 @@ function ParamRow({
 
       {/* 删除按钮 */}
       <div className="col-span-1 flex items-center justify-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onDelete}
-          className={cn(
-            "h-6 w-6 text-destructive hover:text-destructive transition-opacity",
-            isHovered ? "opacity-100" : "opacity-0"
-          )}
-          title={t('queryParams.deleteParam')}
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
+        {!isNew ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onDelete}
+            className={cn(
+              "h-6 w-6 text-destructive hover:text-destructive transition-opacity",
+              isHovered ? "opacity-100" : "opacity-0"
+            )}
+            title={t('queryParams.deleteParam')}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        ) : null}
       </div>
     </motion.div>
   )
