@@ -18,6 +18,7 @@ import { useLayoutStore, useApiStore } from '@/store'
 import { useResize } from '@/hooks/useResize'
 import { ApiTree } from '@/components/common/ApiTree'
 import { EnvironmentManager } from '@/components/features/EnvironmentManager'
+import { ActionBar } from '@/components/common/ActionBar'
 import { cn } from '@/lib/utils'
 
 /**
@@ -33,7 +34,7 @@ export function LeftPanel() {
     setLeftPanelWidth,
     setLeftPanelActiveView
   } = useLayoutStore()
-  const { collections } = useApiStore()
+  const { collections, createNewTab, createNewEnvironmentTab } = useApiStore()
 
   // 拖拽调整大小
   const { width, startResize, isResizing } = useResize(
@@ -96,6 +97,35 @@ export function LeftPanel() {
     }
   ]
 
+  // 处理新建按钮点击
+  const handleNewClick = (itemType) => {
+    switch (itemType) {
+      case 'http':
+        createNewTab()
+        break
+      case 'environment':
+        createNewEnvironmentTab()
+        break
+      case 'collection':
+        // TODO: 实现创建集合功能
+        console.log('Create collection')
+        break
+      case 'workspace':
+        // TODO: 实现创建工作区功能
+        console.log('Create workspace')
+        break
+      default:
+        createNewTab()
+        break
+    }
+  }
+
+  // 处理导入按钮点击
+  const handleImportClick = (activeView) => {
+    // TODO: 实现导入功能
+    console.log('Import clicked for view:', activeView)
+  }
+
   return (
     <div className="flex h-full border-r bg-background">
       {/* 左侧图标导航栏 */}
@@ -123,7 +153,12 @@ export function LeftPanel() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="flex flex-col overflow-hidden"
           >
-            <ContentArea activeView={leftPanelActiveView} collections={collections} />
+            <ContentArea
+              activeView={leftPanelActiveView}
+              collections={collections}
+              onNewClick={() => handleNewClick(leftPanelActiveView)}
+              onImportClick={() => handleImportClick(leftPanelActiveView)}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -177,27 +212,18 @@ function NavigationItem({ item, onClick }) {
 /**
  * 内容区域组件
  */
-function ContentArea({ activeView, collections }) {
+function ContentArea({ activeView, collections, onNewClick, onImportClick }) {
   const { t } = useTranslation()
 
   switch (activeView) {
     case 'collections':
       return (
         <>
-          {/* 上栏：New和Import按钮 */}
-          <div className="h-14 border-b flex items-center justify-between px-4">
-            <div className="flex space-x-2">
-              <Button size="sm" className="flex items-center space-x-1 h-8">
-                <Plus className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">New</span>
-              </Button>
-              <Button variant="outline" size="sm" className="flex items-center space-x-1 h-8">
-                <Import className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">Import</span>
-              </Button>
-            </div>
-          </div>
-
+          <ActionBar
+            activeView={activeView}
+            onNewClick={onNewClick}
+            onImportClick={onImportClick}
+          />
           {/* API集合树 */}
           <div className="flex-1 overflow-hidden">
             <ScrollArea className="h-full">
@@ -211,20 +237,34 @@ function ContentArea({ activeView, collections }) {
 
     case 'environments':
       return (
-        <div className="flex-1 overflow-hidden">
-          <EnvironmentManager />
-        </div>
+        <>
+          <ActionBar
+            activeView={activeView}
+            onNewClick={onNewClick}
+            onImportClick={onImportClick}
+          />
+          <div className="flex-1 overflow-hidden">
+            <EnvironmentManager />
+          </div>
+        </>
       )
 
     default:
       return (
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center text-muted-foreground max-w-sm">
-            <div className="text-5xl mb-6">🚧</div>
-            <h3 className="text-base font-medium mb-3 capitalize">{activeView}</h3>
-            <p className="text-xs leading-relaxed">{t('settings.underDevelopment')}</p>
+        <>
+          <ActionBar
+            activeView={activeView}
+            onNewClick={onNewClick}
+            onImportClick={onImportClick}
+          />
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center text-muted-foreground max-w-sm">
+              <div className="text-5xl mb-6">🚧</div>
+              <h3 className="text-base font-medium mb-3 capitalize">{activeView}</h3>
+              <p className="text-xs leading-relaxed">{t('settings.underDevelopment')}</p>
+            </div>
           </div>
-        </div>
+        </>
       )
   }
 }

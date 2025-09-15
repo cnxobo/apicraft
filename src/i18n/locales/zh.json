@@ -142,5 +142,34 @@
     "switch": "切换语言",
     "english": "English",
     "chinese": "中文"
+  },
+  "buttons": {
+    "new": "新建",
+    "import": "导入",
+    "addVariable": "添加变量"
+  },
+  "placeholders": {
+    "variableName": "变量名",
+    "noVariablesYet": "暂无变量。点击\"添加变量\"开始创建。"
+  },
+  "creation": {
+    "title": "创建新项目",
+    "description": "选择您要创建的内容",
+    "http": {
+      "title": "HTTP 请求",
+      "description": "创建新的HTTP请求来测试API"
+    },
+    "collection": {
+      "title": "集合",
+      "description": "创建新的集合来组织请求"
+    },
+    "environment": {
+      "title": "环境",
+      "description": "创建新的环境来管理变量"
+    },
+    "workspace": {
+      "title": "工作区",
+      "description": "创建新的工作区进行团队协作"
+    }
   }
 }

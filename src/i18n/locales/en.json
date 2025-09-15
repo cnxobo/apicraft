@@ -143,7 +143,33 @@
     "english": "English",
     "chinese": "中文"
   },
-  "environment": {
-    "noEnvironment": "No Environment"
+  "buttons": {
+    "new": "New",
+    "import": "Import",
+    "addVariable": "Add Variable"
+  },
+  "placeholders": {
+    "variableName": "Variable Name",
+    "noVariablesYet": "No variables yet. Click \"Add Variable\" to get started."
+  },
+  "creation": {
+    "title": "Create New",
+    "description": "Choose what you want to create",
+    "http": {
+      "title": "HTTP Request",
+      "description": "Create a new HTTP request to test APIs"
+    },
+    "collection": {
+      "title": "Collection",
+      "description": "Create a new collection to organize requests"
+    },
+    "environment": {
+      "title": "Environment",
+      "description": "Create a new environment for variables"
+    },
+    "workspace": {
+      "title": "Workspace",
+      "description": "Create a new workspace for team collaboration"
+    }
   }
 }

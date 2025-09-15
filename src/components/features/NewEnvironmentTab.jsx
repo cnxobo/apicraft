@@ -133,7 +133,7 @@ export function NewEnvironmentTab({ tabData, tabId }) {
             {/* 变量列表 */}
             {variables.length === 0 ? (
               <div className="text-center text-muted-foreground text-sm py-8">
-                No variables yet. Click "Add Variable" to get started.
+                {t('placeholders.noVariablesYet')}
               </div>
             ) : (
               <div className="space-y-3">
@@ -145,7 +145,7 @@ export function NewEnvironmentTab({ tabData, tabId }) {
                     {/* 变量名 */}
                     <div className="col-span-3">
                       <Input
-                        placeholder="Variable Name"
+                        placeholder={t('placeholders.variableName')}
                         value={variable.name}
                         onChange={(e) => updateVariable(variable.id, 'name', e.target.value)}
                         className="h-8 text-xs"
