@@ -14,7 +14,8 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
-    "noResults": "No results found"
+    "noResults": "No results found",
+    "actions": "Actions"
   },
   "header": {
     "appName": "APICraft",
@@ -31,6 +32,26 @@
     "history": "History",
     "docs": "Documentation",
     "logs": "Logs"
+  },
+  "environment": {
+    "title": "Environments",
+    "searchPlaceholder": "Search Environment",
+    "createNew": "Create New Environment",
+    "newEnvironment": "New Environment",
+    "environmentName": "Environment Name",
+    "noEnvironment": "No Environment",
+    "globals": "Globals",
+    "variables": "Variables",
+    "addVariable": "Add Variable",
+    "variableName": "Variable Name",
+    "variableType": "Type",
+    "variableValue": "Value",
+    "regular": "Regular",
+    "encrypted": "Encrypted",
+    "noVariables": "No variables yet. Click \"Add Variable\" to get started.",
+    "creating": "Creating...",
+    "deleteConfirm": "Are you sure you want to delete this environment?",
+    "variableDeleteConfirm": "Are you sure you want to delete this variable?"
   },
   "request": {
     "urlPlaceholder": "Enter request URL...",

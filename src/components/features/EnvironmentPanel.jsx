@@ -4,7 +4,7 @@ import { Plus, Edit, Trash2, Eye, EyeOff, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useApiStore } from '@/store'
+import { useEnvironmentStore } from '@/store'
 import { cn } from '@/lib/utils'
 
 /**
@@ -12,13 +12,13 @@ import { cn } from '@/lib/utils'
  * 管理不同环境的变量配置
  */
 export function EnvironmentPanel() {
-  const { environments, activeEnvironment, setActiveEnvironment } = useApiStore()
+  const { environmentData, selectedEnvironmentId, setSelectedEnvironment } = useEnvironmentStore()
   const [editingVar, setEditingVar] = useState(null)
   const [showValues, setShowValues] = useState({})
 
   // 切换环境
   const handleEnvironmentChange = (envId) => {
-    setActiveEnvironment(envId)
+    setSelectedEnvironment(envId)
   }
 
   // 切换变量值显示/隐藏
@@ -53,11 +53,14 @@ export function EnvironmentPanel() {
         <div className="space-y-2">
           <label className="text-sm font-medium">当前环境</label>
           <select
-            value={activeEnvironment}
+            value={selectedEnvironmentId}
             onChange={(e) => handleEnvironmentChange(e.target.value)}
             className="w-full px-3 py-2 border rounded-md text-sm"
           >
-            {environments.map(env => (
+            <option key="globals" value="globals">
+              {environmentData.globals.name}
+            </option>
+            {environmentData.environments.map(env => (
               <option key={env.id} value={env.id}>
                 {env.name}
               </option>
@@ -70,11 +73,23 @@ export function EnvironmentPanel() {
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4 space-y-4">
-            {environments.map(env => (
+            <EnvironmentSection
+              key="globals"
+              environment={environmentData.globals}
+              isActive={selectedEnvironmentId === "globals"}
+              showValues={showValues}
+              editingVar={editingVar}
+              onToggleVisibility={toggleValueVisibility}
+              onStartEdit={startEditingVar}
+              onSaveEdit={saveVarEdit}
+              onCancelEdit={cancelEdit}
+              setEditingVar={setEditingVar}
+            />
+            {environmentData.environments.map(env => (
               <EnvironmentSection
                 key={env.id}
                 environment={env}
-                isActive={env.id === activeEnvironment}
+                isActive={env.id === selectedEnvironmentId}
                 showValues={showValues}
                 editingVar={editingVar}
                 onToggleVisibility={toggleValueVisibility}

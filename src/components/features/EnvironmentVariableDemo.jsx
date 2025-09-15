@@ -290,7 +290,7 @@ function VariableList({ environmentId }) {
             </span>
           </div>
           <div className="text-xs text-muted-foreground font-mono break-all">
-            {variable.type === 'secret' ? '••••••••' : variable.currentValue}
+            {variable.type === 'encrypted' ? '••••••••' : variable.value}
           </div>
         </div>
       ))}

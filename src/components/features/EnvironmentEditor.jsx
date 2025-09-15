@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { 
   Plus, 
   Trash2, 
@@ -27,6 +28,7 @@ import { cn } from '@/lib/utils'
  * 环境变量编辑器组件 - 用于标签页中的环境变量管理
  */
 export function EnvironmentEditor({ environmentId }) {
+  const { t } = useTranslation()
   const {
     environmentData,
     addVariable,
@@ -38,9 +40,8 @@ export function EnvironmentEditor({ environmentId }) {
   const [isAdding, setIsAdding] = useState(false)
   const [newVariable, setNewVariable] = useState({
     name: '',
-    type: 'string',
-    initialValue: '',
-    currentValue: ''
+    type: 'regular',
+    value: ''
   })
 
   // 获取环境数据
@@ -60,52 +61,47 @@ export function EnvironmentEditor({ environmentId }) {
   }
 
   // 处理添加新变量
-  const handleAddVariable = () => {
+  const handleAddVariable = async () => {
     if (newVariable.name.trim()) {
-      addVariable(environmentId, {
-        ...newVariable,
-        currentValue: newVariable.currentValue || newVariable.initialValue
-      })
-      setNewVariable({
-        name: '',
-        type: 'string',
-        initialValue: '',
-        currentValue: ''
-      })
-      setIsAdding(false)
+      try {
+        await addVariable(environmentId, newVariable)
+        setNewVariable({
+          name: '',
+          type: 'regular',
+          value: ''
+        })
+        setIsAdding(false)
+      } catch (error) {
+        console.error('Failed to add variable:', error)
+      }
     }
   }
 
   // 处理更新变量
-  const handleUpdateVariable = (varId, updates) => {
-    updateVariable(environmentId, varId, updates)
-    setEditingVarId(null)
+  const handleUpdateVariable = async (varId, updates) => {
+    try {
+      await updateVariable(environmentId, varId, updates)
+      setEditingVarId(null)
+    } catch (error) {
+      console.error('Failed to update variable:', error)
+    }
   }
 
   // 处理删除变量
-  const handleDeleteVariable = (varId) => {
-    deleteVariable(environmentId, varId)
-  }
-
-  // 重置当前值到初始值
-  const resetToInitialValue = (variable) => {
-    updateVariable(environmentId, variable.id, {
-      currentValue: variable.initialValue
-    })
+  const handleDeleteVariable = async (varId) => {
+    try {
+      await deleteVariable(environmentId, varId)
+    } catch (error) {
+      console.error('Failed to delete variable:', error)
+    }
   }
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* 头部 */}
+      {/* 头部 - 简化布局，移除图标和统计 */}
       <div className="h-14 border-b flex items-center justify-between px-6">
-        <div className="flex items-center space-x-3">
-          <Settings className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <h2 className="text-lg font-semibold">{environment.name}</h2>
-            <p className="text-sm text-muted-foreground">
-              {environment.variables.length} variables
-            </p>
-          </div>
+        <div>
+          <h2 className="text-lg font-semibold">{environment.name}</h2>
         </div>
         <Button
           size="sm"
@@ -120,15 +116,14 @@ export function EnvironmentEditor({ environmentId }) {
       {/* 变量表格 */}
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="p-6">
+          <div className="p-4">
             <div className="border rounded-lg overflow-hidden">
-              {/* 表格头 */}
-              <div className="grid grid-cols-12 gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
-                <div className="col-span-3">Variable</div>
-                <div className="col-span-2">Type</div>
-                <div className="col-span-3">Initial Value</div>
-                <div className="col-span-3">Current Value</div>
-                <div className="col-span-1">Actions</div>
+              {/* 表格头 - 简化为单一值字段，紧凑布局 */}
+              <div className="grid grid-cols-12 gap-3 p-3 bg-muted/50 border-b font-medium text-xs">
+                <div className="col-span-4">{t('environment.variableName')}</div>
+                <div className="col-span-2">{t('environment.variableType')}</div>
+                <div className="col-span-5">{t('environment.variableValue')}</div>
+                <div className="col-span-1">{t('common.actions')}</div>
               </div>
 
               {/* 添加新变量行 */}
@@ -138,14 +133,15 @@ export function EnvironmentEditor({ environmentId }) {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="grid grid-cols-12 gap-4 p-4 border-b bg-accent/20"
+                    className="grid grid-cols-12 gap-3 p-3 border-b bg-accent/20"
                   >
-                    <div className="col-span-3">
+                    <div className="col-span-4">
                       <Input
                         placeholder="Variable name"
                         value={newVariable.name}
                         onChange={(e) => setNewVariable(prev => ({ ...prev, name: e.target.value }))}
                         autoFocus
+                        className="h-8 text-xs"
                       />
                     </div>
                     <div className="col-span-2">
@@ -154,24 +150,12 @@ export function EnvironmentEditor({ environmentId }) {
                         onChange={(type) => setNewVariable(prev => ({ ...prev, type }))}
                       />
                     </div>
-                    <div className="col-span-3">
+                    <div className="col-span-5">
                       <ValueInput
                         type={newVariable.type}
-                        value={newVariable.initialValue}
-                        onChange={(value) => setNewVariable(prev => ({ 
-                          ...prev, 
-                          initialValue: value,
-                          currentValue: prev.currentValue || value
-                        }))}
-                        placeholder="Initial value"
-                      />
-                    </div>
-                    <div className="col-span-3">
-                      <ValueInput
-                        type={newVariable.type}
-                        value={newVariable.currentValue}
-                        onChange={(value) => setNewVariable(prev => ({ ...prev, currentValue: value }))}
-                        placeholder="Current value"
+                        value={newVariable.value}
+                        onChange={(value) => setNewVariable(prev => ({ ...prev, value }))}
+                        placeholder="Value"
                       />
                     </div>
                     <div className="col-span-1 flex space-x-1">
@@ -179,9 +163,9 @@ export function EnvironmentEditor({ environmentId }) {
                         size="icon"
                         variant="ghost"
                         onClick={handleAddVariable}
-                        className="h-8 w-8"
+                        className="h-6 w-6"
                       >
-                        <Check className="h-4 w-4" />
+                        <Check className="h-3 w-3" />
                       </Button>
                       <Button
                         size="icon"
@@ -190,14 +174,13 @@ export function EnvironmentEditor({ environmentId }) {
                           setIsAdding(false)
                           setNewVariable({
                             name: '',
-                            type: 'string',
-                            initialValue: '',
-                            currentValue: ''
+                            type: 'regular',
+                            value: ''
                           })
                         }}
-                        className="h-8 w-8"
+                        className="h-6 w-6"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   </motion.div>
@@ -215,7 +198,7 @@ export function EnvironmentEditor({ environmentId }) {
                   onSave={(updates) => handleUpdateVariable(variable.id, updates)}
                   onCancel={() => setEditingVarId(null)}
                   onDelete={() => handleDeleteVariable(variable.id)}
-                  onReset={() => resetToInitialValue(variable)}
+
                   isEven={index % 2 === 0}
                 />
               ))}
@@ -243,16 +226,13 @@ export function EnvironmentEditor({ environmentId }) {
  */
 function TypeSelector({ value, onChange, disabled = false }) {
   const types = [
-    { value: 'string', label: 'String' },
-    { value: 'number', label: 'Number' },
-    { value: 'boolean', label: 'Boolean' },
-    { value: 'datetime', label: 'DateTime' },
-    { value: 'secret', label: 'Secret' }
+    { value: 'regular', label: 'Regular' },
+    { value: 'encrypted', label: 'Encrypted' }
   ]
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="h-8">
+      <SelectTrigger className="h-8 text-xs">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -272,7 +252,7 @@ function TypeSelector({ value, onChange, disabled = false }) {
 function ValueInput({ type, value, onChange, placeholder, disabled = false }) {
   const [showSecret, setShowSecret] = useState(false)
 
-  if (type === 'secret') {
+  if (type === 'encrypted') {
     return (
       <div className="relative">
         <Input
@@ -281,7 +261,7 @@ function ValueInput({ type, value, onChange, placeholder, disabled = false }) {
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
-          className="pr-8 h-8"
+          className="pr-8 h-8 text-xs"
         />
         <Button
           type="button"
@@ -296,28 +276,14 @@ function ValueInput({ type, value, onChange, placeholder, disabled = false }) {
     )
   }
 
-  if (type === 'boolean') {
-    return (
-      <Select value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger className="h-8">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="true">true</SelectItem>
-          <SelectItem value="false">false</SelectItem>
-        </SelectContent>
-      </Select>
-    )
-  }
-
   return (
     <Input
-      type={type === 'number' ? 'number' : 'text'}
+      type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       disabled={disabled}
-      className="h-8"
+      className="h-8 text-xs"
     />
   )
 }
@@ -325,22 +291,20 @@ function ValueInput({ type, value, onChange, placeholder, disabled = false }) {
 /**
  * 变量行组件
  */
-function VariableRow({ 
-  variable, 
-  environmentId, 
-  isEditing, 
-  onEdit, 
-  onSave, 
-  onCancel, 
-  onDelete, 
-  onReset,
-  isEven 
+function VariableRow({
+  variable,
+  environmentId,
+  isEditing,
+  onEdit,
+  onSave,
+  onCancel,
+  onDelete,
+  isEven
 }) {
   const [editData, setEditData] = useState({
     name: variable.name,
     type: variable.type,
-    initialValue: variable.initialValue,
-    currentValue: variable.currentValue
+    value: variable.value
   })
 
   const handleSave = () => {
@@ -351,34 +315,31 @@ function VariableRow({
     setEditData({
       name: variable.name,
       type: variable.type,
-      initialValue: variable.initialValue,
-      currentValue: variable.currentValue
+      value: variable.value
     })
     onCancel()
   }
-
-  const hasChanged = variable.currentValue !== variable.initialValue
 
   return (
     <motion.div
       layout
       className={cn(
-        "grid grid-cols-12 gap-4 p-4 border-b group hover:bg-muted/30 transition-colors",
+        "grid grid-cols-12 gap-3 p-2 border-b group hover:bg-muted/30 transition-colors",
         isEven && "bg-muted/10"
       )}
     >
-      <div className="col-span-3">
+      <div className="col-span-4">
         {isEditing ? (
           <Input
             value={editData.name}
             onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
-            className="h-8"
+            className="h-8 text-xs"
           />
         ) : (
-          <span className="font-medium">{variable.name}</span>
+          <span className="font-medium text-xs">{variable.name}</span>
         )}
       </div>
-      
+
       <div className="col-span-2">
         {isEditing ? (
           <TypeSelector
@@ -386,55 +347,27 @@ function VariableRow({
             onChange={(type) => setEditData(prev => ({ ...prev, type }))}
           />
         ) : (
-          <span className="text-sm px-2 py-1 bg-secondary rounded capitalize">
+          <span className="text-xs px-2 py-1 bg-secondary rounded capitalize">
             {variable.type}
           </span>
         )}
       </div>
-      
-      <div className="col-span-3">
+
+      <div className="col-span-5">
         {isEditing ? (
           <ValueInput
             type={editData.type}
-            value={editData.initialValue}
-            onChange={(value) => setEditData(prev => ({ ...prev, initialValue: value }))}
+            value={editData.value}
+            onChange={(value) => setEditData(prev => ({ ...prev, value }))}
           />
         ) : (
-          <span className="text-sm text-muted-foreground break-all">
-            {variable.type === 'secret' ? '••••••••' : variable.initialValue}
+          <span className="text-xs break-all">
+            {variable.type === 'encrypted' ? '••••••••' : variable.value}
           </span>
         )}
       </div>
       
-      <div className="col-span-3">
-        {isEditing ? (
-          <ValueInput
-            type={editData.type}
-            value={editData.currentValue}
-            onChange={(value) => setEditData(prev => ({ ...prev, currentValue: value }))}
-          />
-        ) : (
-          <div className="flex items-center space-x-2">
-            <span className={cn(
-              "text-sm break-all",
-              hasChanged && "text-orange-600 dark:text-orange-400"
-            )}>
-              {variable.type === 'secret' ? '••••••••' : variable.currentValue}
-            </span>
-            {hasChanged && (
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={onReset}
-                className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                title="Reset to initial value"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
+
       
       <div className="col-span-1">
         {isEditing ? (
@@ -443,17 +376,17 @@ function VariableRow({
               size="icon"
               variant="ghost"
               onClick={handleSave}
-              className="h-8 w-8"
+              className="h-6 w-6"
             >
-              <Check className="h-4 w-4" />
+              <Check className="h-3 w-3" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
               onClick={handleCancel}
-              className="h-8 w-8"
+              className="h-6 w-6"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3 w-3" />
             </Button>
           </div>
         ) : (
@@ -462,17 +395,17 @@ function VariableRow({
               size="icon"
               variant="ghost"
               onClick={onEdit}
-              className="h-8 w-8 opacity-0 group-hover:opacity-100"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100"
             >
-              <Edit2 className="h-4 w-4" />
+              <Edit2 className="h-3 w-3" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
               onClick={onDelete}
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3 w-3" />
             </Button>
           </div>
         )}

@@ -5,7 +5,7 @@ import { LeftPanel } from '@/components/layout/LeftPanel'
 import { CenterPanel } from '@/components/layout/CenterPanel'
 import { RightPanel } from '@/components/layout/RightPanel'
 import { Footer } from '@/components/layout/Footer'
-import { useThemeStore, useApiStore, useLayoutStore } from '@/store'
+import { useThemeStore, useApiStore, useLayoutStore, useEnvironmentStore } from '@/store'
 import { mockCollections, mockEnvironments } from '@/data/mockData'
 
 /**
@@ -14,7 +14,8 @@ import { mockCollections, mockEnvironments } from '@/data/mockData'
  */
 function App() {
   const { theme, setTheme } = useThemeStore()
-  const { collections, environments } = useApiStore()
+  const { collections, initializeCollections, isInitialized: collectionsInitialized } = useApiStore()
+  const { initializeData, isInitialized: environmentsInitialized } = useEnvironmentStore()
   const { leftPanelCollapsed, rightPanelCollapsed } = useLayoutStore()
 
   // 初始化主题
@@ -23,15 +24,21 @@ function App() {
     setTheme(theme)
   }, [])
 
-  // 初始化模拟数据
+  // 初始化数据从 IndexedDB
   useEffect(() => {
-    // 如果没有数据，加载模拟数据
-    if (collections.length === 0) {
-      // 这里应该调用store的方法来设置初始数据
-      // 由于store使用了persist，这些数据会被自动保存
-      console.log('加载模拟数据')
+    const initializeStores = async () => {
+      try {
+        await Promise.all([
+          initializeData(),
+          initializeCollections()
+        ])
+      } catch (error) {
+        console.error('Failed to initialize stores:', error)
+      }
     }
-  }, [collections])
+
+    initializeStores()
+  }, [])
 
   // 监听系统主题变化
   useEffect(() => {

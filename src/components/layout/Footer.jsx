@@ -2,20 +2,22 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Wifi, WifiOff, Activity, Clock, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useApiStore } from '@/store'
+import { useApiStore, useEnvironmentStore } from '@/store'
 
 /**
  * 底部状态栏组件
  * 显示当前环境、网络状态、接口执行状态、实时日志等信息
  */
 export function Footer() {
-  const { activeEnvironment, environments } = useApiStore()
+  const { environmentData, selectedEnvironmentId } = useEnvironmentStore()
   const [networkStatus, setNetworkStatus] = React.useState('online')
   const [requestCount, setRequestCount] = React.useState(0)
   const [lastRequestTime, setLastRequestTime] = React.useState(null)
 
   // 获取当前环境信息
-  const currentEnv = environments.find(env => env.id === activeEnvironment)
+  const currentEnv = selectedEnvironmentId === 'globals'
+    ? environmentData.globals
+    : environmentData.environments?.find(env => env.id === selectedEnvironmentId)
 
   // 模拟网络状态检测
   React.useEffect(() => {

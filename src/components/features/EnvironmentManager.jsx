@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { 
   Plus, 
   Search, 
@@ -22,6 +23,7 @@ import { VariableTable } from './VariableTable'
  * 环境变量管理器主组件
  */
 export function EnvironmentManager() {
+  const { t } = useTranslation()
   const {
     environmentData,
     selectedEnvironmentId,
@@ -31,7 +33,7 @@ export function EnvironmentManager() {
     renameEnvironment
   } = useEnvironmentStore()
 
-  const { openEnvironmentTab } = useApiStore()
+  const { openEnvironmentTab, createNewEnvironmentTab } = useApiStore()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [isCreating, setIsCreating] = useState(false)
@@ -44,13 +46,9 @@ export function EnvironmentManager() {
     .filter(env => env.name.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name)) // 按字典序排序
 
-  // 处理创建新环境
-  const handleCreateEnvironment = () => {
-    if (newEnvName.trim()) {
-      createEnvironment(newEnvName.trim())
-      setNewEnvName('')
-      setIsCreating(false)
-    }
+  // 处理创建新环境 - 打开新环境标签页
+  const handleCreateNewEnvironment = () => {
+    createNewEnvironmentTab()
   }
 
   // 处理重命名环境
@@ -89,120 +87,61 @@ export function EnvironmentManager() {
     <div className="h-full flex bg-background">
       {/* 左侧环境列表 */}
       <div className="w-80 border-r flex flex-col">
-        {/* 工具栏 */}
-        <div className="h-14 border-b flex items-center justify-between px-4 space-x-2">
+        {/* 工具栏 - 创建按钮和搜索在同一行 */}
+        <div className="h-12 border-b flex items-center px-3 space-x-2">
           <Button
             size="sm"
-            onClick={() => setIsCreating(true)}
-            className="flex items-center space-x-1"
+            variant="ghost"
+            onClick={handleCreateNewEnvironment}
+            className="h-8 w-8 p-0 hover:bg-muted"
           >
-            <Plus className="h-3 w-3" />
-            <span>Create New Environment</span>
+            <Plus className="h-4 w-4" />
           </Button>
-        </div>
-
-        {/* 搜索框 */}
-        <div className="p-4 border-b">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex-1 relative">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
             <Input
-              placeholder="Search environments..."
+              placeholder={t('environment.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="h-8 pl-7 text-xs"
             />
           </div>
         </div>
 
         {/* 环境列表 */}
         <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
-            {/* Globals 环境 */}
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+          <div className="p-1 space-y-0.5">
+            {/* Globals 环境 - 紧凑布局，无图标 */}
+            <div
               className={cn(
-                "flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors",
+                "flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors text-xs",
                 selectedEnvironmentId === 'globals'
                   ? "bg-primary text-primary-foreground"
                   : "hover:bg-muted"
               )}
               onClick={() => handleEnvironmentSelect('globals', 'Globals')}
             >
-              <div className="flex items-center space-x-2">
-                <Globe className="h-4 w-4" />
-                <span className="font-medium">Globals</span>
-              </div>
-              <span className="text-xs opacity-70">
-                {environmentData.globals.variables.length} vars
-              </span>
-            </motion.div>
+              <span className="font-medium">{t('environment.globals')}</span>
+            </div>
 
             {/* 分隔符 */}
-            <div className="h-px bg-border my-2" />
+            <div className="h-px bg-border my-1" />
 
-            {/* 创建新环境输入框 */}
-            <AnimatePresence>
-              {isCreating && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="flex items-center space-x-2 p-2"
-                >
-                  <Input
-                    placeholder="Environment name"
-                    value={newEnvName}
-                    onChange={(e) => setNewEnvName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleCreateEnvironment()
-                      if (e.key === 'Escape') {
-                        setIsCreating(false)
-                        setNewEnvName('')
-                      }
-                    }}
-                    autoFocus
-                    className="flex-1"
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={handleCreateEnvironment}
-                    className="h-8 w-8"
-                  >
-                    <Check className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => {
-                      setIsCreating(false)
-                      setNewEnvName('')
-                    }}
-                    className="h-8 w-8"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
-            {/* 用户环境列表 */}
+
+            {/* 用户环境列表 - 紧凑布局，无图标 */}
             {filteredEnvironments.map((env) => (
-              <motion.div
+              <div
                 key={env.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 className={cn(
-                  "flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors group",
+                  "flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors group text-xs",
                   selectedEnvironmentId === env.id
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-muted"
                 )}
                 onClick={() => handleEnvironmentSelect(env.id, env.name)}
               >
-                <div className="flex items-center space-x-2 flex-1">
-                  <Folder className="h-4 w-4" />
+                <div className="flex items-center flex-1">
                   {editingEnvId === env.id ? (
                     <Input
                       value={editingName}
@@ -213,7 +152,7 @@ export function EnvironmentManager() {
                       }}
                       onBlur={() => handleRenameEnvironment(env.id)}
                       autoFocus
-                      className="h-6 text-sm"
+                      className="h-6 text-xs"
                       onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
@@ -221,64 +160,33 @@ export function EnvironmentManager() {
                   )}
                 </div>
                 
-                <div className="flex items-center space-x-1">
-                  <span className="text-xs opacity-70">
-                    {env.variables.length} vars
-                  </span>
-                  
-                  {editingEnvId === env.id ? (
-                    <div className="flex space-x-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleRenameEnvironment(env.id)
-                        }}
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                      >
-                        <Check className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          cancelEditing()
-                        }}
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex space-x-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          startEditing(env)
-                        }}
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                      >
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          deleteEnvironment(env.id)
-                        }}
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
+                {editingEnvId !== env.id && (
+                  <div className="flex space-x-1 opacity-0 group-hover:opacity-100">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        startEditing(env)
+                      }}
+                      className="h-5 w-5"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteEnvironment(env.id)
+                      }}
+                      className="h-5 w-5 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </ScrollArea>

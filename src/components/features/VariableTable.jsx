@@ -119,23 +119,18 @@ export function VariableTable({ environment, environmentId }) {
   const [isAdding, setIsAdding] = useState(false)
   const [newVariable, setNewVariable] = useState({
     name: '',
-    type: 'string',
-    initialValue: '',
-    currentValue: ''
+    type: 'regular',
+    value: ''
   })
 
   // 处理添加新变量
   const handleAddVariable = () => {
     if (newVariable.name.trim()) {
-      addVariable(environmentId, {
-        ...newVariable,
-        currentValue: newVariable.currentValue || newVariable.initialValue
-      })
+      addVariable(environmentId, newVariable)
       setNewVariable({
         name: '',
-        type: 'string',
-        initialValue: '',
-        currentValue: ''
+        type: 'regular',
+        value: ''
       })
       setIsAdding(false)
     }
@@ -152,12 +147,10 @@ export function VariableTable({ environment, environmentId }) {
     deleteVariable(environmentId, varId)
   }
 
-  // 重置当前值到初始值
-  const resetToInitialValue = (variable) => {
-    updateVariable(environmentId, variable.id, {
-      currentValue: variable.initialValue
-    })
-  }
+  // 这个函数不再需要，因为我们只有一个值字段
+  // const resetToInitialValue = (variable) => {
+  //   // 不再需要重置功能
+  // }
 
   return (
     <div className="flex flex-col h-full">
@@ -185,10 +178,9 @@ export function VariableTable({ environment, environmentId }) {
           <div className="border rounded-lg overflow-hidden">
             {/* 表格头 */}
             <div className="grid grid-cols-12 gap-4 p-4 bg-muted/50 border-b font-medium text-sm">
-              <div className="col-span-3">Variable</div>
+              <div className="col-span-4">Variable</div>
               <div className="col-span-2">Type</div>
-              <div className="col-span-3">Initial Value</div>
-              <div className="col-span-3">Current Value</div>
+              <div className="col-span-5">Value</div>
               <div className="col-span-1">Actions</div>
             </div>
 
@@ -201,7 +193,7 @@ export function VariableTable({ environment, environmentId }) {
                   exit={{ opacity: 0, height: 0 }}
                   className="grid grid-cols-12 gap-4 p-4 border-b bg-accent/20"
                 >
-                  <div className="col-span-3">
+                  <div className="col-span-4">
                     <Input
                       placeholder="Variable name"
                       value={newVariable.name}
@@ -215,24 +207,12 @@ export function VariableTable({ environment, environmentId }) {
                       onChange={(type) => setNewVariable(prev => ({ ...prev, type }))}
                     />
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-5">
                     <ValueInput
                       type={newVariable.type}
-                      value={newVariable.initialValue}
-                      onChange={(value) => setNewVariable(prev => ({ 
-                        ...prev, 
-                        initialValue: value,
-                        currentValue: prev.currentValue || value
-                      }))}
-                      placeholder="Initial value"
-                    />
-                  </div>
-                  <div className="col-span-3">
-                    <ValueInput
-                      type={newVariable.type}
-                      value={newVariable.currentValue}
-                      onChange={(value) => setNewVariable(prev => ({ ...prev, currentValue: value }))}
-                      placeholder="Current value"
+                      value={newVariable.value}
+                      onChange={(value) => setNewVariable(prev => ({ ...prev, value }))}
+                      placeholder="Value"
                     />
                   </div>
                   <div className="col-span-1 flex space-x-1">
@@ -251,9 +231,8 @@ export function VariableTable({ environment, environmentId }) {
                         setIsAdding(false)
                         setNewVariable({
                           name: '',
-                          type: 'string',
-                          initialValue: '',
-                          currentValue: ''
+                          type: 'regular',
+                          value: ''
                         })
                       }}
                       className="h-8 w-8"
@@ -276,7 +255,7 @@ export function VariableTable({ environment, environmentId }) {
                 onSave={(updates) => handleUpdateVariable(variable.id, updates)}
                 onCancel={() => setEditingVarId(null)}
                 onDelete={() => handleDeleteVariable(variable.id)}
-                onReset={() => resetToInitialValue(variable)}
+
                 isEven={index % 2 === 0}
               />
             ))}
@@ -300,22 +279,20 @@ export function VariableTable({ environment, environmentId }) {
 /**
  * 变量行组件
  */
-function VariableRow({ 
-  variable, 
-  environmentId, 
-  isEditing, 
-  onEdit, 
-  onSave, 
-  onCancel, 
-  onDelete, 
-  onReset,
-  isEven 
+function VariableRow({
+  variable,
+  environmentId,
+  isEditing,
+  onEdit,
+  onSave,
+  onCancel,
+  onDelete,
+  isEven
 }) {
   const [editData, setEditData] = useState({
     name: variable.name,
     type: variable.type,
-    initialValue: variable.initialValue,
-    currentValue: variable.currentValue
+    value: variable.value
   })
 
   const handleSave = () => {
@@ -326,13 +303,10 @@ function VariableRow({
     setEditData({
       name: variable.name,
       type: variable.type,
-      initialValue: variable.initialValue,
-      currentValue: variable.currentValue
+      value: variable.value
     })
     onCancel()
   }
-
-  const hasChanged = variable.currentValue !== variable.initialValue
 
   return (
     <motion.div
@@ -342,7 +316,7 @@ function VariableRow({
         isEven && "bg-muted/10"
       )}
     >
-      <div className="col-span-3">
+      <div className="col-span-4">
         {isEditing ? (
           <Input
             value={editData.name}
@@ -352,7 +326,7 @@ function VariableRow({
           <span className="font-medium">{variable.name}</span>
         )}
       </div>
-      
+
       <div className="col-span-2">
         {isEditing ? (
           <TypeSelector
@@ -365,48 +339,18 @@ function VariableRow({
           </span>
         )}
       </div>
-      
-      <div className="col-span-3">
+
+      <div className="col-span-5">
         {isEditing ? (
           <ValueInput
             type={editData.type}
-            value={editData.initialValue}
-            onChange={(value) => setEditData(prev => ({ ...prev, initialValue: value }))}
+            value={editData.value}
+            onChange={(value) => setEditData(prev => ({ ...prev, value }))}
           />
         ) : (
-          <span className="text-sm text-muted-foreground break-all">
-            {variable.type === 'secret' ? '••••••••' : variable.initialValue}
+          <span className="text-sm break-all">
+            {variable.type === 'encrypted' ? '••••••••' : variable.value}
           </span>
-        )}
-      </div>
-      
-      <div className="col-span-3">
-        {isEditing ? (
-          <ValueInput
-            type={editData.type}
-            value={editData.currentValue}
-            onChange={(value) => setEditData(prev => ({ ...prev, currentValue: value }))}
-          />
-        ) : (
-          <div className="flex items-center space-x-2">
-            <span className={cn(
-              "text-sm break-all",
-              hasChanged && "text-orange-600 dark:text-orange-400"
-            )}>
-              {variable.type === 'secret' ? '••••••••' : variable.currentValue}
-            </span>
-            {hasChanged && (
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={onReset}
-                className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                title="Reset to initial value"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
         )}
       </div>
       

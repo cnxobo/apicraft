@@ -41,14 +41,14 @@ export function resolveEnvironmentVariables(text, environmentId = null) {
   
   // 添加当前环境的变量
   environment.variables.forEach(variable => {
-    variableMap.set(variable.name, variable.currentValue)
+    variableMap.set(variable.name, variable.value)
   })
-  
+
   // 如果不是 globals 环境，也添加 globals 变量作为后备
   if (envId !== 'globals') {
     environmentData.globals.variables.forEach(variable => {
       if (!variableMap.has(variable.name)) {
-        variableMap.set(variable.name, variable.currentValue)
+        variableMap.set(variable.name, variable.value)
       }
     })
   }
@@ -114,15 +114,15 @@ export function getEnvironmentVariables(environmentId = null) {
   
   // 先添加 globals 变量
   environmentData.globals.variables.forEach(variable => {
-    variables[variable.name] = variable.currentValue
+    variables[variable.name] = variable.value
   })
-  
+
   // 如果不是 globals 环境，添加当前环境变量（会覆盖同名的 globals 变量）
   if (envId !== 'globals') {
     const environment = environmentData.environments.find(env => env.id === envId)
     if (environment) {
       environment.variables.forEach(variable => {
-        variables[variable.name] = variable.currentValue
+        variables[variable.name] = variable.value
       })
     }
   }

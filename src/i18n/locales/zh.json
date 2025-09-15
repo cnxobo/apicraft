@@ -14,7 +14,8 @@
     "loading": "加载中...",
     "error": "错误",
     "success": "成功",
-    "noResults": "未找到结果"
+    "noResults": "未找到结果",
+    "actions": "操作"
   },
   "header": {
     "appName": "APICraft",
@@ -31,6 +32,26 @@
     "history": "历史",
     "docs": "文档",
     "logs": "日志"
+  },
+  "environment": {
+    "title": "环境管理",
+    "searchPlaceholder": "搜索环境",
+    "createNew": "创建新环境",
+    "newEnvironment": "新环境",
+    "environmentName": "环境名称",
+    "noEnvironment": "无环境",
+    "globals": "全局",
+    "variables": "变量",
+    "addVariable": "添加变量",
+    "variableName": "变量名",
+    "variableType": "类型",
+    "variableValue": "值",
+    "regular": "普通",
+    "encrypted": "加密",
+    "noVariables": "暂无变量。点击\"添加变量\"开始创建。",
+    "creating": "创建中...",
+    "deleteConfirm": "确定要删除此环境吗？",
+    "variableDeleteConfirm": "确定要删除此变量吗？"
   },
   "request": {
     "urlPlaceholder": "输入请求URL...",
@@ -121,8 +142,5 @@
     "switch": "切换语言",
     "english": "English",
     "chinese": "中文"
-  },
-  "environment": {
-    "noEnvironment": "无环境"
   }
 }

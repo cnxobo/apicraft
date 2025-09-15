@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useApiStore } from '@/store'
 import { RequestEditor } from '@/components/features/RequestEditor'
 import { EnvironmentEditor } from '@/components/features/EnvironmentEditor'
+import { NewEnvironmentTab } from '@/components/features/NewEnvironmentTab'
 import { EnvironmentSwitcher } from '@/components/common/EnvironmentSwitcher'
 import { cn, HTTP_METHOD_COLORS } from '@/lib/utils'
 
@@ -79,6 +80,10 @@ function TabContent({ tabId }) {
   // 根据标签页类型渲染不同的内容
   switch (tab.type) {
     case 'environment':
+      // 检查是否是新环境标签页
+      if (tab.data.isNew) {
+        return <NewEnvironmentTab tabData={tab.data} tabId={tabId} />
+      }
       return <EnvironmentEditor environmentId={tab.data.environmentId} />
     case 'request':
     default:
