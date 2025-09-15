@@ -194,7 +194,12 @@ function RequestDetails({ api, onUpdate }) {
   // 检查各个部分是否有修改
   const hasParamsModified = api.params && (Array.isArray(api.params) ? api.params.length > 0 : Object.keys(api.params).length > 0)
   const hasHeadersModified = api.headers && Object.keys(api.headers).length > 0
-  const hasBodyModified = api.body && api.body.trim().length > 0
+  const hasBodyModified = api.body && (
+    (typeof api.body === 'string' && api.body.trim().length > 0) ||
+    (typeof api.body === 'object' && api.body.raw && api.body.raw.trim().length > 0) ||
+    (typeof api.body === 'object' && api.body.formData && api.body.formData.length > 0) ||
+    (typeof api.body === 'object' && api.body.urlencoded && api.body.urlencoded.length > 0)
+  )
 
   return (
     <Tabs defaultValue="params" className="h-full flex flex-col">
@@ -227,7 +232,7 @@ function RequestDetails({ api, onUpdate }) {
         </TabsContent>
 
         <TabsContent value="body" className="h-full m-0">
-          <BodyEditor body={api.body || ''} onUpdate={(body) => onUpdate({ body })} />
+          <BodyEditor body={api.body || { type: 'none', raw: '', formData: [], urlencoded: [] }} onUpdate={(body) => onUpdate({ body })} />
         </TabsContent>
 
         <TabsContent value="auth" className="h-full m-0">
@@ -276,11 +281,25 @@ function HeadersEditor({ headers, onUpdate }) {
  * 请求体编辑器
  */
 function BodyEditor({ body, onUpdate }) {
+  // 处理body的不同格式
+  const bodyValue = typeof body === 'string' ? body : (body?.raw || '')
+
+  const handleChange = (value) => {
+    if (typeof body === 'string') {
+      onUpdate(value)
+    } else {
+      onUpdate({
+        ...body,
+        raw: value
+      })
+    }
+  }
+
   return (
     <div className="h-full p-4">
       <textarea
-        value={body}
-        onChange={(e) => onUpdate(e.target.value)}
+        value={bodyValue}
+        onChange={(e) => handleChange(e.target.value)}
         placeholder="请求体内容..."
         className="w-full h-full resize-none border rounded-md p-3 text-sm font-mono bg-background"
       />

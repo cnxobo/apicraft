@@ -191,23 +191,6 @@ export function EnvironmentManager() {
           </div>
         </ScrollArea>
       </div>
-
-      {/* 右侧变量表格 */}
-      <div className="flex-1 flex flex-col">
-        {selectedEnvironment ? (
-          <VariableTable
-            environment={selectedEnvironment}
-            environmentId={selectedEnvironmentId}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Select an environment to manage variables</p>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   )
 }

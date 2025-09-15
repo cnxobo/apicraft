@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Plus, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +8,7 @@ import { RequestEditor } from '@/components/features/RequestEditor'
 import { EnvironmentEditor } from '@/components/features/EnvironmentEditor'
 import { NewEnvironmentTab } from '@/components/features/NewEnvironmentTab'
 import { EnvironmentSwitcher } from '@/components/common/EnvironmentSwitcher'
+import { NewItemDialog } from '@/components/common/NewItemDialog'
 import { cn, HTTP_METHOD_COLORS } from '@/lib/utils'
 
 /**
@@ -16,7 +17,7 @@ import { cn, HTTP_METHOD_COLORS } from '@/lib/utils'
  */
 export function CenterPanel() {
   const { t } = useTranslation()
-  const { tabs, activeTabId, closeTab, setActiveTab, createNewTab } = useApiStore()
+  const { tabs, activeTabId, closeTab, setActiveTab, createNewTab, createNewEnvironmentTab } = useApiStore()
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -28,6 +29,7 @@ export function CenterPanel() {
           onTabClick={setActiveTab}
           onTabClose={closeTab}
           onNewTab={createNewTab}
+          onNewEnvironmentTab={createNewEnvironmentTab}
         />
         {/* 环境切换器 - 独立放置在最右侧 */}
         <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10">
@@ -94,32 +96,68 @@ function TabContent({ tabId }) {
 /**
  * 标签管理器组件
  */
-function TabManager({ tabs, activeTabId, onTabClick, onTabClose, onNewTab }) {
+function TabManager({ tabs, activeTabId, onTabClick, onTabClose, onNewTab, onNewEnvironmentTab }) {
+  const [showNewDialog, setShowNewDialog] = useState(false)
+
+  const handleNewButtonClick = () => {
+    setShowNewDialog(true)
+  }
+
+  const handleItemSelect = (itemType) => {
+    switch (itemType) {
+      case 'http':
+        onNewTab()
+        break
+      case 'environment':
+        onNewEnvironmentTab()
+        break
+      case 'collection':
+        // TODO: 实现创建集合功能
+        console.log('Create collection')
+        break
+      case 'workspace':
+        // TODO: 实现创建工作区功能
+        console.log('Create workspace')
+        break
+      default:
+        onNewTab()
+        break
+    }
+  }
+
   return (
-    <div className="flex items-center h-full overflow-x-auto custom-scrollbar pr-32">
-      {/* 标签列表 */}
-      <div className="flex items-center">
-        {tabs.map((tab) => (
-          <Tab
-            key={tab.id}
-            tab={tab}
-            isActive={tab.id === activeTabId}
-            onClick={() => onTabClick(tab.id)}
-            onClose={() => onTabClose(tab.id)}
-          />
-        ))}
+    <>
+      <div className="flex items-center h-full overflow-x-auto custom-scrollbar pr-32">
+        {/* 标签列表 */}
+        <div className="flex items-center">
+          {tabs.map((tab) => (
+            <Tab
+              key={tab.id}
+              tab={tab}
+              isActive={tab.id === activeTabId}
+              onClick={() => onTabClick(tab.id)}
+              onClose={() => onTabClose(tab.id)}
+            />
+          ))}
+        </div>
+
+        {/* 新建标签按钮 */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 ml-2 flex-shrink-0"
+          onClick={handleNewButtonClick}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* 新建标签按钮 */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 ml-2 flex-shrink-0"
-        onClick={onNewTab}
-      >
-        <Plus className="h-4 w-4" />
-      </Button>
-    </div>
+      <NewItemDialog
+        open={showNewDialog}
+        onOpenChange={setShowNewDialog}
+        onItemSelect={handleItemSelect}
+      />
+    </>
   )
 }
 
